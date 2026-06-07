@@ -1,0 +1,99 @@
+#!/bin/sh
+
+# =========================
+# EVOLVER OS CORE SYSTEM
+# =========================
+
+BASE="$HOME/evolver_os"
+LOG="$BASE/logs"
+TASKS="$BASE/tasks"
+DATA="$BASE/data"
+BACKUP="$BASE/backups"
+MODULES="$BASE/modules"
+
+mkdir -p "$LOG" "$TASKS" "$DATA" "$BACKUP" "$MODULES"
+
+echo "===================================" 
+echo " EVOLVER OS STARTED"
+echo " TIME: $(date)"
+echo "==================================="
+
+# -------------------------
+# CORE FUNCTIONS
+# -------------------------
+
+log_event() {
+    echo "[$(date)] $1" >> "$LOG/system.log"
+}
+
+backup_system() {
+    DATE=$(date +%Y%m%d_%H%M%S)
+    tar -czf "$BACKUP/backup_$DATE.tar.gz" "$BASE" 2>/dev/null
+    log_event "Backup created: backup_$DATE.tar.gz"
+}
+
+scan_tasks() {
+    for task in "$TASKS"/*.sh
+    do
+        [ -f "$task" ] || continue
+        log_event "Executing task: $task"
+        sh "$task"
+    done
+}
+
+generate_status() {
+    echo "System Status Report - $(date)" > "$DATA/status.txt"
+    echo "Uptime session active" >> "$DATA/status.txt"
+    echo "Tasks directory: $(ls "$TASKS" | wc -l) files" >> "$DATA/status.txt"
+    log_event "Status report generated"
+}
+
+# -------------------------
+# AI MODULE PLACEHOLDER
+# -------------------------
+ai_engine() {
+    # Placeholder for OpenAI / API integration
+    # Replace with curl call if API key is configured
+
+    echo "AI Engine Cycle Running..." >> "$LOG/ai.log"
+
+    # Example:
+    # curl https://api.openai.com/v1/responses \
+    # -H "Authorization: Bearer $OPENAI_API_KEY" \
+    # -H "Content-Type: application/json" \
+    # -d '{"model":"gpt-4.1-mini","input":"generate optimization plan"}'
+
+    log_event "AI cycle executed"
+}
+
+# -------------------------
+# MAIN LOOP
+# -------------------------
+
+COUNTER=0
+
+while true
+do
+    COUNTER=$((COUNTER+1))
+
+    log_event "Cycle $COUNTER started"
+
+    scan_tasks
+    generate_status
+
+    # Run backup every 10 cycles
+    if [ $((COUNTER % 10)) -eq 0 ]
+    then
+        backup_system
+    fi
+
+    # AI cycle every 3 cycles
+    if [ $((COUNTER % 3)) -eq 0 ]
+    then
+        ai_engine
+    fi
+
+    log_event "Cycle $COUNTER complete"
+
+    sleep 60
+done
